@@ -25,7 +25,7 @@ public class InitialClass {
 		    
 		    try {
 				//initialise file, reader and parser.
-		    	File file = new File("/Users/aligulez/Desktop/IRDM-Data/tweets_snippet.txt") ;
+		    	File file = new File("/Users/aligulez/Desktop/IRDM-Data/test.txt") ;
 		    	InputStream inputStream = new FileInputStream(file) ;		    	
 		    	JsonParser p = f.createJsonParser(inputStream) ;// p is the parser
 		    	JsonGenerator g = f.createJsonGenerator(new File("/Users/aligulez/Desktop/IRDM-Data/output_data.json"), JsonEncoding.UTF8);// g is the generator
@@ -47,6 +47,13 @@ public class InitialClass {
 		    		current = p.nextToken() ; 
 		    		String fieldname = p.getCurrentName() ;
 		    		
+		    		if(current == JsonToken.START_OBJECT && fieldname != null ){//detect internal objects within tweets
+		    			
+		    			while(p.nextToken() != JsonToken.END_OBJECT){
+		    				  //do nothing 
+		    			}//end while
+		    		}//end internal object skip
+		    		
 		    		if ("text".equals(fieldname)) {//detect text fieldname within tweet
 
 		    			current = p.nextToken();
@@ -60,34 +67,26 @@ public class InitialClass {
 		    			while(itr.hasMoreTokens()) {//iterate over words in the tweet 
 		    						    				
 		    				String word = itr.nextToken() ;// each word in a single tweet
-		    						    				
-		    				for (int i = 0; i < word.length(); i++ ){
-		    					
-		    					if(word.charAt(i) == '@'){
+		    	
+		    				if(word.charAt(0) == '@'){
+		    					//do nothing
+		    				}else{
 		    						
-		    						break; //break the for loop
+		    					if (newTweet.equals("")){//for the initial word 
+		    						newTweet = word; 		    		
 		    					
-		    					}else{
-		    						
-		    						if (newTweet.equals("")){//for the initial word 
-		    							newTweet = word; 
-		    							break; //break for not to replicate words
-		    						}else{
-		    							
-		    						newTweet += (" " + word) ;//keep the word in the tweet
-		    						break;//break for not to replicate words
-		    						}
-		    						
-		    					}//end if
+		    					}else{		    					
+		    						newTweet += (" " + word) ;//keep the word in the tweet		    						
 		    					
-		    				}//end for 
-		    			
+		    					}//end if 		    						
+		    				}//end if
 		    			
 		    			}//end while	
 		    			
 		    			g.writeStartObject(); 
 		    			g.writeStringField("text", newTweet);
 		    			g.writeEndObject();
+		    			System.out.println(newTweet) ;
 		    			
 		    			
 		    		 }//end if 
