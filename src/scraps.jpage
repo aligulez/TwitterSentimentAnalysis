@@ -1,0 +1,13 @@
+
+
+import java.util.StringTokenizer;
+
+String s = "Niresh Mac OS X Mavericks 10.9 - With AMD &amp; Intel - USB - Niresh http://t.co/iLfv5SjWEI" ;
+
+StringTokenizer itr = new StringTokenizer(s) ;
+
+while(itr.hasMoreTokens()){
+	
+	String word = itr.nextToken(); 
+	
+}
