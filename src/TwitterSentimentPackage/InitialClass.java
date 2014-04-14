@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,7 +24,7 @@ public class InitialClass {
 		    JsonFactory f = new JsonFactory();
 		    
 		    try {
-				//initialise file, reader and parser.
+				//initialize file, reader and parser.
 		    	File file = new File("/Users/aligulez/Desktop/IRDMGroup/test.txt") ;
 		    	InputStream inputStream = new FileInputStream(file) ;		    	
 		    	JsonParser p = f.createJsonParser(inputStream) ;// p is the parser
@@ -34,7 +33,8 @@ public class InitialClass {
 		    	JsonToken current; 
 		    	
 		    	current = p.nextToken();
-
+		    	
+		    	String newTwt = new String() ;
 		    	
 		    	//check if initial object is a start of the tweet object
 		    	if (current != JsonToken.START_OBJECT){
@@ -44,42 +44,26 @@ public class InitialClass {
 		    		
 		    	}//end if
 	    			    	
+		    	int counter = 0 ;
+		    	
 		    	while(p.hasCurrentToken()== true){
 		    		
 		    		current = p.nextToken() ; 
 		    		String fieldname = p.getCurrentName() ;
+		    						 
 		    		
-				    String newTweet ;
-
-		    		
-		    		//skip entities since dont want to print "text" field of hashtags. 
-		    		if ("entities".equals(fieldname)){
-		    			
-		    			while(!("favorited".equals(fieldname))){
-		    				current = p.nextToken() ;
-		    				fieldname = p.getCurrentName();
-		    			}//end while		    			
-		    		}//end if 
-		    		
-		    		//skip retweeted_statys since dont want to print repetitive "text" fields. 
-		    		if ("retweeted_status".equals(fieldname)){
-		    			
-		    			while(!("geo".equals(fieldname))){
-		    				current = p.nextToken() ;
-		    				fieldname = p.getCurrentName();
-		    			}//end while		    			
-		    		}//end if 
-		    		
+		    		//pre-processing the "text"
 		    		if ("text".equals(fieldname)) {//detect text fieldname within tweet
 
+		    		
 		    			current = p.nextToken();
 
 		    			String value = p.getValueAsString() ;//get the resulting tweet 
 		    			
 		    			StringTokenizer itr = new StringTokenizer(value) ;
 
-		    			newTweet = "";
-
+		    			newTwt = "" ;
+		    			
 		    			while(itr.hasMoreTokens()) {//iterate over words in the tweet 
 		    						    				
 		    				String word = itr.nextToken() ;// each word in a single tweet
@@ -91,8 +75,9 @@ public class InitialClass {
 		    			    Matcher matLink2 = patLink2.matcher(word) ;
 		    			    
 		    			    //detect and remove punctuation within "text"
-		    			    //Pattern patPunc = Pattern.compile("[][(){},.;!?<>%") ;
-		    			    //patPunc.matcher(word).replaceAll("");
+		    			    //Pattern patPunc = Pattern.compile("[\\Q][(){},.;!?<>%\\E]") ;//   [][(){},.;!?<>%
+		    			    //word = patPunc.matcher(word).replaceAll("");
+		    			   
 		    			    
 		    				if(word.charAt(0) == '@'){//for removing usernames 
 		    					//do nothing
@@ -100,24 +85,50 @@ public class InitialClass {
 		    					//do nothing 
 		    					//System.out.println(mat2.group(0));
 		    				}else{						
-		    						
-		    					if (newTweet.equals("")){//for the initial word 
-		    						newTweet = word; 		    		
+		    					
+		    					word = word.replaceAll("[\\Q][(){},.:;!?<>%\\E]", "") ;
+		    					
+		    					if (newTwt.equals("")){//for the initial word 
+		    						newTwt = word; 		    		
 		    					
 		    					}else{		    					
-		    						newTweet += (" " + word) ;//keep the word in the tweet		    						
+		    						newTwt += (" " + word) ;//keep the word in the tweet		    						
 		    					
 		    					}//end if 		    						
 		    				}//end if
 		    			
 		    			}//end while	
 		    		
-		    			g.writeStartObject(); 
-		    			g.writeStringField("text", newTweet);
-		    			g.writeEndObject();
-		    			System.out.println(newTweet) ;
+		    			//skip all the fields until reaching "lang"
+		    			while(!("filter_level".equals(fieldname))){
+		    				current = p.nextToken() ;
+		    				fieldname = p.getCurrentName();
+		    				
+		    			}
+		    			
 		    			
 		    		 }//end if 
+		    		
+		    		if ("lang".equals(fieldname)){
+
+		    			current = p.nextToken();
+		    			
+		    			if (p.getValueAsString().equals("en")){
+		    				
+		    				//counter = counter + 1 ; 
+		    				g.writeStartObject(); 
+		    				g.writeStringField("text", newTwt);
+		    				g.writeEndObject();
+		    				System.out.println(newTwt) ;
+		    				newTwt = "" ;
+		    				
+		    			
+		    			}//end if 		 
+		    		
+		    		
+		    		}//end if language checker 
+	    		
+		    		//if (counter == 300){ break ;}
 		    		
 		    	}//end while 
 		    			
